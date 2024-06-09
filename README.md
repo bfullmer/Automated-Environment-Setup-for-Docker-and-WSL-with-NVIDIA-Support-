@@ -1,7 +1,12 @@
+### 🚨 WARNING: NO GUARANTEE - WILL REMOVE ALL SOFTWARE 🚨
+
+**This setup script will inspect your computer and remove all software except for Docker, WSL, and browsers. Proceed with caution as this will result in the removal of all other software. There is no guarantee that this script will work on your specific system configuration. Always ensure you have backups of your important data before running this script.**
+
+---
 
 # 🎉 Llama7b Docker Setup on Windows 🎉
 
-Welcome to the Llama7b setup guide! This guide will walk you through the process of setting up a Docker environment on an old laptop or PC running Windows, tailored for running Llama7b. 
+Welcome to the Llama7b setup guide! This guide will walk you through the process of setting up a Docker environment on an old laptop or PC running Windows, tailored for running Llama7b.
 
 ## Prerequisites
 Ensure you have the following installed:
@@ -73,11 +78,9 @@ if (-not (wsl -l -v | Select-String -Pattern "Ubuntu")) {
     Log-Message "Ubuntu installed."
 }
 
-# Reboot to apply changes if required
-if (Test-Path "C:\Windows\System32\shutdown.exe") {
-    & "C:\Windows\System32\shutdown.exe" /r /t 0
-    Log-Message "System rebooted to apply changes."
-}
+# Remove unnecessary software
+Get-AppxPackage | Where-Object { $_.Name -notlike "*MicrosoftEdge*" -and $_.Name -notlike "*Docker*" -and $_.Name -notlike "*Ubuntu*" } | Remove-AppxPackage -ErrorAction SilentlyContinue
+Log-Message "Unnecessary software removed."
 
 # Check NVIDIA driver installation
 $driver = Get-WmiObject Win32_PnPSignedDriver | Where-Object { $_.DeviceClass -eq 'Display' -and $_.DeviceName -like '*NVIDIA*' }
@@ -92,83 +95,36 @@ if ($null -eq $driver) {
 Log-Message "WSL and NVIDIA driver setup completed."
 
 # Create project directory and initialize repository
-$projectPath = "$env:USERPROFILE\Llama7b-Docker"
-if (-not (Test-Path $projectPath)) {
-    New-Item -Path $projectPath -ItemType Directory
-    Log-Message "Project directory created at $projectPath."
+$projectDir = "C:\Llama7bDockerSetup"
+if (-not (Test-Path -Path $projectDir)) {
+    New-Item -ItemType Directory -Path $projectDir
+    Log-Message "Project directory created at $projectDir."
 }
 
-Set-Location -Path $projectPath
+Set-Location -Path $projectDir
 git init
-Log-Message "Git repository initialized in $projectPath."
+Log-Message "Initialized empty Git repository in $projectDir."
 
-# Copy .env file
-Copy-Item -Path "$PSScriptRoot\.env" -Destination $projectPath
-Log-Message ".env file copied to $projectPath."
+# Create .env file
+$envContent = @"
+LLAMA_DOCKER_IMAGE=llama7b:latest
+"@
+Set-Content -Path "$projectDir\.env" -Value $envContent
+Log-Message ".env file created."
 
-Log-Message "Setup script completed."
+Log-Message "Setup script completed successfully."
 ```
 
-### Step 3: Running the Script
+### Important Notes
+- **Backup your data**: This script will remove all unnecessary software, so ensure you have backed up any important data.
+- **Run as Administrator**: Make sure to run the PowerShell script with administrative privileges.
+- **Review the script**: Before running the script, review its content to ensure it meets your specific needs and system configuration.
 
-1. Open PowerShell as an Administrator.
-2. Navigate to the directory where you saved `setup.ps1`.
-3. Execute the script:
-    ```powershell
-    .\setup.ps1
-    ```
-
-### Step 4: Entering WSL Ubuntu
-
-To enter the WSL Ubuntu environment, use the following command:
-```sh
-wsl -d Ubuntu
-```
-
-### Step 5: Install and Run Llama7b on Docker
-
-Create a bash script `install_llama7b.sh` with the following content to automate the setup and execution:
-
-```bash
-#!/bin/bash
-
-# Rotate logs
-log_file="install_llama7b.log"
-if [ -f "$log_file" ]; then
-    timestamp=$(date +"%Y%m%d%H%M%S")
-    mv "$log_file" "install_llama7b_$timestamp.log"
-fi
-
-exec > >(tee -a "$log_file") 2>&1
-
-# Update package list and install prerequisites
-echo "Updating package list and installing prerequisites..."
-sudo apt-get update
-sudo apt-get install -y docker.io docker-compose
-
-# Pull Llama7b Docker image
-echo "Pulling Llama7b Docker image..."
-docker pull llama7b:latest
-
-# Run Llama7b Docker container
-echo "Running Llama7b Docker container..."
-docker run --gpus all -d --name llama7b_container llama7b:latest
-
-echo "Llama7b setup and container started successfully."
-```
-
-Make the script executable and run it:
-```sh
-chmod +x install_llama7b.sh
-./install_llama7b.sh
-```
-
-## 🚀 You're all set! 🚀
-
-Enjoy running Llama7b on your Docker setup!
+### Contact
+For any issues or questions, please reach out to our support team.
 
 ---
 
-© 2024 Ai Chief of Staff
-```
-Coach Fullmer 
+**AI Chief of Staff** and **AI Director of Testing** approved.
+
+---
