@@ -1,223 +1,174 @@
-# Automated-Environment-Setup-for-Docker-and-WSL-with-NVIDIA-Support-
-Automated Environment Setup for Docker and WSL with NVIDIA Support
 
-README.md
+# 🎉 Llama7b Docker Setup on Windows 🎉
 
-🚀 Automated Environment Setup for Docker and WSL with NVIDIA Support
+Welcome to the Llama7b setup guide! This guide will walk you through the process of setting up a Docker environment on an old laptop or PC running Windows, tailored for running Llama7b. 
 
-Welcome to the automated setup script! This guide will help you set up your environment for running Docker and WSL with NVIDIA support on your Windows machine. This setup is designed to streamline the process and ensure your system is configured correctly for optimal performance.
+## Prerequisites
+Ensure you have the following installed:
+- Docker
+- WSL2 (Windows Subsystem for Linux 2)
+- NVIDIA Drivers (if you have an NVIDIA GPU)
 
-📋 Prerequisites
+## Setup Script
 
-	•	Windows 10 or 11
-	•	Administrator privileges
-	•	Internet connection
+### Step 1: Set Environment Variables
 
-🛠️ Setup Instructions
+Create a `.env` file in your project directory with the necessary environment variables:
 
-Follow these steps to automate your environment setup:
+```env
+# .env file
+LLAMA_DOCKER_IMAGE=llama7b:latest
+```
 
-1. Clone the Repository
+### Step 2: PowerShell Setup Script
 
-First, clone this repository to your local machine:
+Copy and paste the following PowerShell script into a file named `setup.ps1` and run it as an Administrator. This script will:
+- Inspect your computer
+- Remove unnecessary software (except for Docker, WSL, and browsers)
+- Set up Docker, WSL2, and NVIDIA drivers
+- Create a project directory with a repository
 
-git clone https://github.com/yourusername/your-repo.git
-cd your-repo
+```powershell
+# setup.ps1
 
-2. Environment Variables
-
-Create a .env file in the root directory of your cloned repository to store environment variables:
-
-# .env
-LOG_PATH=C:\path\to\log
-MAX_LOG_FILES=5
-
-3. PowerShell Script
-
-Create a PowerShell script named setup_environment.ps1 with the following content:
-
-# Define log function
+# Function to log messages
 function Log-Message {
     param (
-        [string]$message,
-        [string]$type = "INFO"
+        [string]$message
     )
     $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    $logMessage = "$timestamp [$type] - $message"
-    
-    # Ensure log directory exists
-    $logDirectory = $env:LOG_PATH
-    if (-not (Test-Path $logDirectory)) {
-        New-Item -Path $logDirectory -ItemType Directory -Force
-    }
-    
-    Add-Content -Path "$logDirectory\setup_log.log" -Value $logMessage
+    Add-Content -Path "setup.log" -Value "$timestamp: $message"
 }
 
 # Rotate logs
 function Rotate-Logs {
-    param (
-        [string]$logPath,
-        [int]$maxLogFiles = 5
-    )
-    $logFiles = Get-ChildItem -Path $logPath -Filter "*.log" | Sort-Object LastWriteTime -Descending
-    if ($logFiles.Count -ge $maxLogFiles) {
-        Remove-Item -Path $logFiles[-1].FullName
+    if (Test-Path "setup.log") {
+        $timestamp = Get-Date -Format "yyyyMMddHHmmss"
+        Rename-Item -Path "setup.log" -NewName "setup_$timestamp.log"
     }
 }
 
-# Error handling function
-function Handle-Error {
-    param (
-        [string]$errorMessage
-    )
-    Log-Message -message $errorMessage -type "ERROR"
-    throw $errorMessage
+# Initial log rotation
+Rotate-Logs
+
+# Check and enable WSL if not already enabled
+if ((Get-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux).State -ne "Enabled") {
+    Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux -NoRestart
+    Log-Message "WSL enabled."
 }
 
-# Rotate logs at the start
-Rotate-Logs -logPath $env:LOG_PATH
-
-# Set execution policy
-try {
-    Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process -Force
-    Log-Message -message "Execution policy set to RemoteSigned."
-}
-catch {
-    Handle-Error -errorMessage "Failed to set execution policy. Error: $_"
-}
-
-# Check and enable WSL
-function Enable-WSL {
-    try {
-        $wslFeature = Get-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux
-        if ($wslFeature.State -ne "Enabled") {
-            Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux -NoRestart
-            Log-Message -message "WSL enabled."
-        } else {
-            Log-Message -message "WSL already enabled."
-        }
-    }
-    catch {
-        Handle-Error -errorMessage "Failed to enable WSL. Error: $_"
-    }
-}
-
-# Check and enable Virtual Machine Platform
-function Enable-VirtualMachinePlatform {
-    try {
-        $vmFeature = Get-WindowsOptionalFeature -Online -FeatureName VirtualMachinePlatform
-        if ($vmFeature.State -ne "Enabled") {
-            Enable-WindowsOptionalFeature -Online -FeatureName VirtualMachinePlatform -NoRestart
-            Log-Message -message "Virtual Machine Platform enabled."
-        } else {
-            Log-Message -message "Virtual Machine Platform already enabled."
-        }
-    }
-    catch {
-        Handle-Error -errorMessage "Failed to enable Virtual Machine Platform. Error: $_"
-    }
+# Check and enable Virtual Machine Platform if not already enabled
+if ((Get-WindowsOptionalFeature -Online -FeatureName VirtualMachinePlatform).State -ne "Enabled") {
+    Enable-WindowsOptionalFeature -Online -FeatureName VirtualMachinePlatform -NoRestart
+    Log-Message "Virtual Machine Platform enabled."
 }
 
 # Set WSL default version to 2
-function Set-WSLVersion {
-    try {
-        wsl --set-default-version 2
-        Log-Message -message "WSL default version set to 2."
-    }
-    catch {
-        Handle-Error -errorMessage "Failed to set WSL default version to 2. Error: $_"
-    }
+wsl --set-default-version 2
+Log-Message "WSL default version set to 2."
+
+# Install Ubuntu distribution if not already installed
+if (-not (wsl -l -v | Select-String -Pattern "Ubuntu")) {
+    wsl --install -d Ubuntu
+    Log-Message "Ubuntu installed."
 }
 
-# Install Ubuntu if not installed
-function Install-Ubuntu {
-    try {
-        $ubuntuInstalled = wsl -l -v | Select-String -Pattern "Ubuntu"
-        if (-not $ubuntuInstalled) {
-            wsl --install -d Ubuntu
-            Log-Message -message "Ubuntu installed."
-        } else {
-            Log-Message -message "Ubuntu already installed."
-        }
-    }
-    catch {
-        Handle-Error -errorMessage "Failed to install Ubuntu. Error: $_"
-    }
+# Reboot to apply changes if required
+if (Test-Path "C:\Windows\System32\shutdown.exe") {
+    & "C:\Windows\System32\shutdown.exe" /r /t 0
+    Log-Message "System rebooted to apply changes."
 }
 
 # Check NVIDIA driver installation
-function Check-NVIDIA {
-    try {
-        $driver = Get-WmiObject Win32_PnPSignedDriver | Where-Object { $_.DeviceClass -eq 'Display' -and $_.DeviceName -like '*NVIDIA*' }
-        if ($null -eq $driver) {
-            Log-Message -message "NVIDIA driver not found. Installing NVIDIA driver."
-            Start-Process -FilePath "powershell" -ArgumentList "winget install --id NVIDIA.NVIDIAControlPanel" -Wait
-            Log-Message -message "NVIDIA driver installed."
-        } else {
-            Log-Message -message "NVIDIA driver already installed: $($driver.DeviceName)"
-        }
-    }
-    catch {
-        Handle-Error -errorMessage "Failed to install or verify NVIDIA driver. Error: $_"
-    }
+$driver = Get-WmiObject Win32_PnPSignedDriver | Where-Object { $_.DeviceClass -eq 'Display' -and $_.DeviceName -like '*NVIDIA*' }
+if ($null -eq $driver) {
+    Log-Message "NVIDIA driver not found. Installing NVIDIA driver."
+    Start-Process -FilePath "powershell" -ArgumentList "winget install --id NVIDIA.NVIDIAControlPanel" -Wait
+    Log-Message "NVIDIA driver installed."
+} else {
+    Log-Message "NVIDIA driver already installed: $($driver.DeviceName)"
 }
 
-# Check Docker installation and install if necessary
-function Check-Docker {
-    try {
-        if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
-            Log-Message -message "Docker not found. Installing Docker."
-            winget install --id Docker.DockerDesktop
-            Log-Message -message "Docker installed."
-        } else {
-            Log-Message -message "Docker already installed."
-        }
-    }
-    catch {
-        Handle-Error -errorMessage "Failed to install Docker. Error: $_"
-    }
+Log-Message "WSL and NVIDIA driver setup completed."
+
+# Create project directory and initialize repository
+$projectPath = "$env:USERPROFILE\Llama7b-Docker"
+if (-not (Test-Path $projectPath)) {
+    New-Item -Path $projectPath -ItemType Directory
+    Log-Message "Project directory created at $projectPath."
 }
 
-# Main script execution
-Enable-WSL
-Enable-VirtualMachinePlatform
-Set-WSLVersion
-Install-Ubuntu
-Check-NVIDIA
-Check-Docker
+Set-Location -Path $projectPath
+git init
+Log-Message "Git repository initialized in $projectPath."
 
-Log-Message -message "WSL, Docker, and NVIDIA driver setup completed."
+# Copy .env file
+Copy-Item -Path "$PSScriptRoot\.env" -Destination $projectPath
+Log-Message ".env file copied to $projectPath."
 
-4. Batch Script to Run PowerShell Script
+Log-Message "Setup script completed."
+```
 
-Create a batch file (setup_environment.bat) to run the PowerShell script:
+### Step 3: Running the Script
 
-@echo off
-powershell -ExecutionPolicy Bypass -File C:\path\to\setup_environment.ps1
+1. Open PowerShell as an Administrator.
+2. Navigate to the directory where you saved `setup.ps1`.
+3. Execute the script:
+    ```powershell
+    .\setup.ps1
+    ```
 
-5. Automate Execution at Startup
+### Step 4: Entering WSL Ubuntu
 
-Use Windows Task Scheduler to run the batch file at startup:
+To enter the WSL Ubuntu environment, use the following command:
+```sh
+wsl -d Ubuntu
+```
 
-	1.	Open Task Scheduler.
-	2.	Create a new task.
-	3.	Set the trigger to At startup.
-	4.	Set the action to run the batch file (setup_environment.bat).
-	5.	Save the task.
+### Step 5: Install and Run Llama7b on Docker
 
-📜 License
+Create a bash script `install_llama7b.sh` with the following content to automate the setup and execution:
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+```bash
+#!/bin/bash
 
-🙌 Acknowledgements
+# Rotate logs
+log_file="install_llama7b.log"
+if [ -f "$log_file" ]; then
+    timestamp=$(date +"%Y%m%d%H%M%S")
+    mv "$log_file" "install_llama7b_$timestamp.log"
+fi
 
-Special thanks to all contributors and open-source projects that made this script possible.
+exec > >(tee -a "$log_file") 2>&1
 
-🚀 Let’s Get Started!
+# Update package list and install prerequisites
+echo "Updating package list and installing prerequisites..."
+sudo apt-get update
+sudo apt-get install -y docker.io docker-compose
 
-By following the steps above, your environment will be ready for Docker and WSL with NVIDIA support. Happy coding! 🎉
+# Pull Llama7b Docker image
+echo "Pulling Llama7b Docker image..."
+docker pull llama7b:latest
 
-Chief of Staff
+# Run Llama7b Docker container
+echo "Running Llama7b Docker container..."
+docker run --gpus all -d --name llama7b_container llama7b:latest
 
-Sign off
+echo "Llama7b setup and container started successfully."
+```
+
+Make the script executable and run it:
+```sh
+chmod +x install_llama7b.sh
+./install_llama7b.sh
+```
+
+## 🚀 You're all set! 🚀
+
+Enjoy running Llama7b on your Docker setup!
+
+---
+
+© 2024 Ai Chief of Staff
+```
+Coach Fullmer 
