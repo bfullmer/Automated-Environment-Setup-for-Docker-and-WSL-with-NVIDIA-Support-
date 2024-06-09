@@ -169,8 +169,6 @@ Enjoy running Llama7b on your Docker setup!
 
 ---
 
-© 2024 Chief of Staff
+© 2024 Ai Chief of Staff
 ```
-
-This README.md integrates the PowerShell setup script, instructions for entering WSL Ubuntu, and the bash script to install and run Llama7b on Docker, all presented with branding and emojis for an engaging guide.
-This README.md integrates the PowerShell setup script, instructions for entering WSL Ubuntu, and the bash script to install and run Llama7b on Docker, all presented with branding and emojis for an engaging guide.
+Coach Fullmer 
