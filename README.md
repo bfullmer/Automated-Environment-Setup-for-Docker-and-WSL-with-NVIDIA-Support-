@@ -1,4 +1,4 @@
-```md
+
 # 🎉 Llama7b Docker Setup on Windows 🎉
 
 Welcome to the Llama7b setup guide! This guide will walk you through the process of setting up a Docker environment on an old laptop or PC running Windows, tailored for running Llama7b. 
