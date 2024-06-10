@@ -1,25 +1,7 @@
-# Welcome to Coach's YouTube Channel!
+To share the YouTube video [GDxMyn9slpA](https://youtu.be/GDxMyn9slpA?si=beVzvoPKMX19uOur) in a GitHub markdown file, you can use the image-link method to display a thumbnail image that links to the video. Here’s the markdown code you would use:
 
-[![Coach's YouTube Channel Banner](https://example.com/banner.jpg)](https://www.youtube.com/channel/YOUR_CHANNEL_ID)
+```markdown
+[![Video](https://img.youtube.com/vi/GDxMyn9slpA/maxresdefault.jpg)](https://youtu.be/GDxMyn9slpA?si=beVzvoPKMX19uOur)
+```
 
-## Latest Video: [How to Excel in Digital Marketing](https://youtu.be/4olRcVIcBN0?si=1XZSfI2ErI5PwwSr)
-
-<iframe width="560" height="315" src="https://www.youtube.com/embed/4olRcVIcBN0" frameborder="0" allowfullscreen></iframe>
-
-Click the video above to watch the latest video on Coach's YouTube channel.
-
-### About Coach's Channel
-
-Coach's YouTube channel is dedicated to providing valuable insights into digital marketing, storytelling, and entrepreneurial strategies. Join our community today to stay updated on the latest content!
-
-### Connect with Coach
-
-- [Website](https://www.coachswebsite.com)
-- [LinkedIn](https://www.linkedin.com/in/coach)
-- [Twitter](https://twitter.com/coachsusername)
-
-### Contact
-
-![Coach's Icon](https://sandbox:/mnt/data/coach_icon.jpeg)
-
-Feel free to reach out with any questions or feedback!
+This code will display the thumbnail image of the video, and when clicked, it will open the video on YouTube. Replace `maxresdefault.jpg` with `hqdefault.jpg` if you want a lower resolution thumbnail.
